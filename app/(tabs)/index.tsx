@@ -1,74 +1,234 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TouchableOpacity, 
+  ScrollView, 
+  SafeAreaView,
+  RefreshControl,
+  Alert
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+const HomeScreen = () => {
+  const [userPoints, setUserPoints] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const navigation = useNavigation();
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  // Pull to refresh implementation
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    // Simulate data fetch
+    setTimeout(() => {
+      setUserPoints(prev => prev + 10);
+      setRefreshing(false);
+    }, 1000);
+  }, []);
+
+  // Render methods
+  const QuickActionButton = ({ icon, title, onPress }) => (
+    <TouchableOpacity style={styles.quickActionButton} onPress={onPress}>
+      <Ionicons name={icon} size={30} color="#2ecc71" />
+      <Text style={styles.quickActionText}>{title}</Text>
+    </TouchableOpacity>
   );
-}
+
+  // Card Component
+  const HomeCard = ({ icon, title, description, onPress }) => (
+    <TouchableOpacity style={styles.card} onPress={onPress}>
+      <View style={styles.cardIconContainer}>
+        <Ionicons name={icon} size={30} color="#2ecc71" />
+      </View>
+      <View style={styles.cardTextContainer}>
+        <Text style={styles.cardTitle}>{title}</Text>
+        <Text style={styles.cardDescription}>{description}</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={24} color="#95a5a6" />
+    </TouchableOpacity>
+  );
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView 
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#2ecc71']}
+          />
+        }
+      >
+        {/* Header Section */}
+        <View style={styles.headerContainer}>
+          <Text style={styles.headerTitle}>Carbon Grove</Text>
+          <View style={styles.headerPointsContainer}>
+            <Text style={styles.headerPointsText}>{userPoints} 🌳</Text>
+          </View>
+        </View>
+
+        {/* Cards Section */}
+        <View style={styles.cardsContainer}>
+          <HomeCard 
+            icon="list-outline"
+            title="Orders"
+            description="View your recent orders"
+            onPress={() => navigation.navigate('orders')}
+          />
+          <HomeCard 
+            icon="leaf-outline"
+            title="Garden"
+            description="Manage your green space"
+            onPress={() => navigation.navigate('garden')}
+          />
+          <HomeCard 
+            icon="person-outline"
+            title="Profile"
+            description="Edit your profile"
+            onPress={() => navigation.navigate('profile')}
+          />
+        </View>
+
+        {/* Quick Actions */}
+        <View style={styles.quickActionsContainer}>
+          <QuickActionButton 
+            icon="document-text" 
+            title="Upload Bill" 
+            onPress={() => Alert.alert('Upload Bill', 'Feature coming soon!')} 
+          />
+          <QuickActionButton 
+            icon="recycle" 
+            title="Waste Pickup" 
+            onPress={() => Alert.alert('Waste Pickup', 'Feature coming soon!')} 
+          />
+          <QuickActionButton 
+            icon="wallet" 
+            title="Wallet" 
+            onPress={() => Alert.alert('Wallet', 'Feature coming soon!')} 
+          />
+        </View>
+
+        {/* Community Posts Placeholder */}
+        <View style={styles.communityContainer}>
+          <Text style={styles.sectionTitle}>Community Highlights</Text>
+          <View style={styles.communityPostContainer}>
+            <Text style={styles.communityPostContent}>
+              No community posts available yet.
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: '#f4f4f4',
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 15,
+    backgroundColor: 'white',
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#2ecc71',
+  },
+  headerPointsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    backgroundColor: '#e8f5e9',
+    padding: 8,
+    borderRadius: 20,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  headerPointsText: {
+    marginRight: 10,
+    fontWeight: 'bold',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  cardsContainer: {
+    padding: 15,
+  },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 15,
+    marginBottom: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardIconContainer: {
+    backgroundColor: '#e8f5e9',
+    borderRadius: 10,
+    padding: 10,
+    marginRight: 15,
+  },
+  cardTextContainer: {
+    flex: 1,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+    marginBottom: 5,
+  },
+  cardDescription: {
+    fontSize: 14,
+    color: '#7f8c8d',
+  },
+  quickActionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 20,
+    paddingHorizontal: 15,
+  },
+  quickActionButton: {
+    width: 80,
+    height: 80,
+    backgroundColor: 'white',
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  quickActionText: {
+    marginTop: 5,
+    fontSize: 10,
+    color: '#2ecc71',
+  },
+  communityContainer: {
+    marginTop: 20,
+    paddingHorizontal: 15,
+  },
+  communityPostContainer: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 15,
+    alignItems: 'center',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  communityPostContent: {
+    color: '#666',
+    textAlign: 'center',
   },
 });
+
+export default HomeScreen;
